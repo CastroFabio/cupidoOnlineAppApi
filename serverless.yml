@@ -1,0 +1,22 @@
+service: serverlessCupidoOnlineAppAPI
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  profile: pereirafabio
+  stage: dev
+  region: sa-east-1
+  environment:
+    FILE_UPLOAD_BUCKET_NAME: ${self:custom.fileBucketName}
+
+custom:
+  appName: serverless-cupido-online-app
+  fileBucketName: s3-file-bucket-${self:custom.appName}-${self:provider.stage}
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          method: get
+          path: hello
