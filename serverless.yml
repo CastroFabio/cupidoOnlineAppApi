@@ -6,17 +6,63 @@ provider:
   profile: pereirafabio
   stage: dev
   region: sa-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "*"
   environment:
     FILE_UPLOAD_BUCKET_NAME: ${self:custom.fileBucketName}
+    DYNAMODB_USER_TABLE_NAME: ${self:custom.userTableName}
 
 custom:
   appName: serverless-cupido-online-app
   fileBucketName: s3-file-bucket-${self:custom.appName}-${self:provider.stage}
+  userTableName: dynamo-user-table-${self:custom.appName}-${self:provider.stage}
 
 functions:
-  hello:
-    handler: handler.hello
+  createUser:
+    handler: src/handler/createUser.createUser
     events:
       - http:
+          path: create-user
+          method: post
+          cors: true
+  getUser:
+    handler: src/handler/getUser.getUser
+    events:
+      - http:
+          path: get-user/{id}
           method: get
-          path: hello
+          cors: true
+  updateUser:
+    handler: src/handler/updateUser.updateUser
+    events:
+      - http:
+          path: update-user/{id}
+          method: put
+          cors: true
+  deleteUser:
+    handler: src/handler/deleteUser.deleteUser
+    events:
+      - http:
+          path: delete-user/{id}
+          method: delete
+          cors: true
+
+resources:
+  Resources:
+    UserTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.userTableName}
